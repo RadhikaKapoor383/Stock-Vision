@@ -18,3 +18,8 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
 }
+.main-heading {
+    text-align: center;
+    margin: 20px;
+    color: var(--color-primary);
+}
