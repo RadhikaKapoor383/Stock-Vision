@@ -4,7 +4,7 @@ function App() {
   return (
     <Router>
       <MainLayout>
-        <h1>Stock Dashboard</h1>
+        <h1 className='main-heading'>Stock Dashboard</h1>
       </MainLayout>
     </Router>
   )
