@@ -1,6 +1,6 @@
 .sidebar {
   width: var(--sidebar-width);
-  height: 100vh;
+  height: calc(100vh - 60px); /* full height minus navbar */
   background-color: var(--color-primary);
   color: var(--color-bg);
   display: flex;
