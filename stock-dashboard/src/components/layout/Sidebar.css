@@ -7,6 +7,15 @@
   flex-direction: column;
   padding: 20px;
 }
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--sidebar-width);
+  width: 1px;
+  height: 100%;
+  background-color: var(--color-secondary);
+}
 .sidebar h2 {
   margin-bottom: 20px;
 }
