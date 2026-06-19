@@ -1,10 +1,17 @@
+import { useStockData } from './hooks/useStockData';
 import MainLayout from './components/layout/MainLayout';
 import { BrowserRouter as Router } from 'react-router-dom';
+
 function App() {
+  const { data, loading, error } = useStockData('AAPL');
+  
+  console.log('loading:', loading);
+  console.log('data:', data);
+  console.log('error:', error);
+
   return (
     <Router>
       <MainLayout>
-        <h1 className='main-heading'>Stock Dashboard</h1>
       </MainLayout>
     </Router>
   )
