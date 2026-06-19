@@ -1,20 +1,11 @@
 .sidebar {
   width: var(--sidebar-width);
-  height: calc(100vh - 60px); /* full height minus navbar */
+  height: calc(100vh - var(--navbar-height)); /* full height minus navbar */
   background-color: var(--color-primary);
   color: var(--color-bg);
   display: flex;
   flex-direction: column;
   padding: 20px;
-}
-.sidebar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: var(--sidebar-width);
-  width: 1px;
-  height: 100%;
-  background-color: var(--color-secondary);
 }
 .sidebar h2 {
   margin-bottom: 20px;

@@ -5,6 +5,7 @@
   --color-bg: #eaf3fd;           /* page background */
   --color-text: #0e0d0d;         /* main text color */
   --sidebar-width: 220px;      /* e.g. 220px from earlier */
+  --navbar-height: 84px;
 }
 
 * {
