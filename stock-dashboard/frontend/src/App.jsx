@@ -15,6 +15,7 @@ import {
   mockNotifications, 
   mockMessages 
 } from './data/mockData';
+import { seedIfEmpty, addTransaction, deleteTransaction } from './services/transactionStore';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/dashboard.css';
@@ -40,6 +41,23 @@ export default function App() {
   // Selected Message for detailed messaging chat overlay
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+
+  // Transaction log: real, user-maintained, stored locally (no free
+  // brokerage API exists to fetch real buy/sell history)
+  const [transactions, setTransactions] = useState(() => seedIfEmpty(mockTransactions));
+  const [newTx, setNewTx] = useState({ type: 'Buy', symbol: '', quantity: '', price: '' });
+
+  const handleAddTransaction = (e) => {
+    e.preventDefault();
+    if (!newTx.symbol.trim() || !newTx.quantity || !newTx.price) return;
+    const updated = addTransaction(newTx);
+    setTransactions(updated);
+    setNewTx({ type: 'Buy', symbol: '', quantity: '', price: '' });
+  };
+
+  const handleDeleteTransaction = (id) => {
+    setTransactions(deleteTransaction(id));
+  };
 
   // Sync theme to DOM attributes
   useEffect(() => {
@@ -101,11 +119,11 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard userProfile={userProfile} searchQuery={searchQuery} />;
+        return <Dashboard userProfile={userProfile} setUserProfile={setUserProfile} searchQuery={searchQuery} />;
       case 'portfolio':
         return (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row g-4">
-            <div className="col-12 col-xl-8"><PortfolioChart /></div>
+            <div className="col-12 col-xl-8"><PortfolioChart currentValue={userProfile.portfolioValue} /></div>
             <div className="col-12 col-xl-4"><AllocationChart /></div>
           </motion.div>
         );
@@ -126,7 +144,7 @@ export default function App() {
       case 'analytics':
         return (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row g-4">
-            <div className="col-12"><PortfolioChart /></div>
+            <div className="col-12"><PortfolioChart currentValue={userProfile.portfolioValue} /></div>
             <div className="col-12 col-md-6"><AllocationChart /></div>
             <div className="col-12 col-md-6">
               <div className="premium-card h-100">
@@ -154,48 +172,121 @@ export default function App() {
           </motion.div>
         );
       case 'transactions':
-        const filteredTransactions = mockTransactions.filter(tx => 
+        const filteredTransactions = transactions.filter(tx => 
           tx.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tx.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tx.status.toLowerCase().includes(searchQuery.toLowerCase())
         );
         return (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="premium-card">
-            <h5 className="fw-bold mb-3">Transaction History</h5>
-            <p className="text-muted mb-4">Complete audit trail of asset buy/sell transactions</p>
-            <div className="custom-table-container">
-              <table className="custom-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Stock</th>
-                    <th style={{ textAlign: 'right' }}>Quantity</th>
-                    <th style={{ textAlign: 'right' }}>Price</th>
-                    <th style={{ textAlign: 'right' }}>Date</th>
-                    <th style={{ textAlign: 'center' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTransactions.map((tx) => (
-                    <tr key={tx.id}>
-                      <td>
-                        <span className={`badge px-2 py-1 fw-bold ${tx.type === 'Buy' ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`} style={{ borderRadius: '4px', fontSize: '0.7rem' }}>
-                          {tx.type}
-                        </span>
-                      </td>
-                      <td className="fw-bold">{tx.symbol}</td>
-                      <td className="text-end fw-semibold">{tx.quantity}</td>
-                      <td className="text-end fw-semibold">${tx.price}</td>
-                      <td className="text-end text-muted">{tx.date}</td>
-                      <td className="text-center">
-                        <span className={`badge-status badge-${tx.status.toLowerCase()}`}>
-                          {tx.status}
-                        </span>
-                      </td>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="d-flex flex-column gap-4">
+            <div className="premium-card">
+              <h5 className="fw-bold mb-1">Log a Transaction</h5>
+              <p className="text-muted mb-3" style={{ fontSize: '0.8rem' }}>
+                No free market API provides real buy/sell history — log your own trades here instead.
+              </p>
+              <form onSubmit={handleAddTransaction} className="row g-2 align-items-end">
+                <div className="col-6 col-md-2">
+                  <label className="form-label text-secondary fw-semibold" style={{ fontSize: '0.8rem' }}>Type</label>
+                  <select
+                    className="form-select form-control-premium"
+                    value={newTx.type}
+                    onChange={(e) => setNewTx({ ...newTx, type: e.target.value })}
+                  >
+                    <option value="Buy">Buy</option>
+                    <option value="Sell">Sell</option>
+                  </select>
+                </div>
+                <div className="col-6 col-md-3">
+                  <label className="form-label text-secondary fw-semibold" style={{ fontSize: '0.8rem' }}>Symbol</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-premium"
+                    placeholder="AAPL"
+                    value={newTx.symbol}
+                    onChange={(e) => setNewTx({ ...newTx, symbol: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="col-6 col-md-2">
+                  <label className="form-label text-secondary fw-semibold" style={{ fontSize: '0.8rem' }}>Quantity</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    className="form-control form-control-premium"
+                    placeholder="10"
+                    value={newTx.quantity}
+                    onChange={(e) => setNewTx({ ...newTx, quantity: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="col-6 col-md-2">
+                  <label className="form-label text-secondary fw-semibold" style={{ fontSize: '0.8rem' }}>Price</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="form-control form-control-premium"
+                    placeholder="189.84"
+                    value={newTx.price}
+                    onChange={(e) => setNewTx({ ...newTx, price: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="col-12 col-md-3">
+                  <button type="submit" className="btn btn-premium-primary w-100">Add Transaction</button>
+                </div>
+              </form>
+            </div>
+
+            <div className="premium-card">
+              <h5 className="fw-bold mb-3">Transaction History</h5>
+              <p className="text-muted mb-4">Complete audit trail of asset buy/sell transactions</p>
+              <div className="custom-table-container">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Stock</th>
+                      <th style={{ textAlign: 'right' }}>Quantity</th>
+                      <th style={{ textAlign: 'right' }}>Price</th>
+                      <th style={{ textAlign: 'right' }}>Date</th>
+                      <th style={{ textAlign: 'center' }}>Status</th>
+                      <th style={{ textAlign: 'center' }}></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredTransactions.map((tx) => (
+                      <tr key={tx.id}>
+                        <td>
+                          <span className={`badge px-2 py-1 fw-bold ${tx.type === 'Buy' ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`} style={{ borderRadius: '4px', fontSize: '0.7rem' }}>
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="fw-bold">{tx.symbol}</td>
+                        <td className="text-end fw-semibold">{tx.quantity}</td>
+                        <td className="text-end fw-semibold">${tx.price}</td>
+                        <td className="text-end text-muted">{tx.date}</td>
+                        <td className="text-center">
+                          <span className={`badge-status badge-${tx.status.toLowerCase()}`}>
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          <button
+                            type="button"
+                            className="btn btn-sm border-0 bg-transparent text-muted"
+                            onClick={() => handleDeleteTransaction(tx.id)}
+                            title="Delete"
+                          >
+                            &times;
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </motion.div>
         );
@@ -232,7 +323,7 @@ export default function App() {
       case 'settings':
         return <ProfileSettings userProfile={userProfile} setUserProfile={setUserProfile} />;
       default:
-        return <Dashboard userProfile={userProfile} searchQuery={searchQuery} />;
+        return <Dashboard userProfile={userProfile} setUserProfile={setUserProfile} searchQuery={searchQuery} />;
     }
   };
 
