@@ -135,6 +135,20 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+@media (max-width: 575.98px) {
+  .main-content {
+    padding: 12px;
+    padding-top: calc(var(--navbar-height) + 12px);
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding: 10px;
+    padding-top: calc(var(--navbar-height) + 10px);
+  }
+}
+
 /* Custom premium card design */
 .premium-card {
   background-color: var(--bg-secondary);

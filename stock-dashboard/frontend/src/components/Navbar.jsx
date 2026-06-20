@@ -18,7 +18,7 @@ export default function Navbar({
 
   return (
     <nav 
-      className="navbar navbar-expand px-4 py-0 position-sticky top-0" 
+      className="navbar navbar-expand px-3 px-sm-4 py-0 position-sticky top-0" 
       style={{ 
         height: 'var(--navbar-height)', 
         backgroundColor: 'var(--bg-secondary)', 
@@ -32,7 +32,7 @@ export default function Navbar({
         <div className="d-flex align-items-center gap-3 flex-grow-1 flex-md-grow-0" style={{ maxWidth: '50%' }}>
           
           {/* Logo Name on Navbar (visible on smaller screens when sidebar is hidden) */}
-          <div className="d-flex align-items-center gap-2 d-lg-none ms-5">
+          <div className="d-flex align-items-center gap-2 d-lg-none ms-0 ms-sm-5">
             <div className="d-flex align-items-center justify-content-center rounded-3 bg-purple text-white" style={{ width: '32px', height: '32px', backgroundColor: 'var(--accent-purple)' }}>
               <FiTrendingUp size={16} color="#fff" />
             </div>

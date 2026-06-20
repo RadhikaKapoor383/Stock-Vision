@@ -32,7 +32,7 @@ export default function AllocationChart() {
       <div className="row align-items-center">
         {/* Recharts Donut Chart */}
         <div className="col-12 col-md-5 mb-4 mb-md-0 d-flex justify-content-center">
-          <div style={{ width: '100%', height: 180, maxWidth: 180 }}>
+          <div style={{ width: '100%', height: 200, maxWidth: 180 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

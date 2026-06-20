@@ -1,18 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   FiDollarSign, FiBriefcase, FiTrendingUp, FiActivity, FiLayers,
-  FiArrowUpRight, FiArrowDownRight 
+  FiArrowUpRight, FiArrowDownRight
 } from 'react-icons/fi';
 import StatsCard from '../components/StatsCard';
 import PortfolioChart from '../components/PortfolioChart';
 import AllocationChart from '../components/AllocationChart';
 import WatchlistTable from '../components/WatchlistTable';
 import NewsCard from '../components/NewsCard';
-import { 
-  mockMarketOverview, 
-  mockTopPerformers, 
-  mockTransactions 
+import {
+  mockMarketOverview,
+  mockTopPerformers,
+  mockTransactions
 } from '../data/mockData';
 
 export default function Dashboard({ userProfile, searchQuery = '' }) {
@@ -55,7 +55,7 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
     }
   ];
 
-  const filteredTransactions = mockTransactions.filter(tx => 
+  const filteredTransactions = mockTransactions.filter(tx =>
     tx.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.status.toLowerCase().includes(searchQuery.toLowerCase())
@@ -84,7 +84,7 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
         <div className="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
           {mockMarketOverview.map((item, idx) => (
             <div key={item.name} className="col">
-              <motion.div 
+              <motion.div
                 className="premium-card p-3 d-flex justify-content-between align-items-center"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -119,7 +119,7 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
         <div className="col-12 col-xl-8">
           <WatchlistTable searchQuery={searchQuery} />
         </div>
-        
+
         {/* Top Performing Stocks */}
         <div className="col-12 col-xl-4">
           <div className="premium-card h-100">
@@ -128,7 +128,7 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
 
             <div className="d-flex flex-column gap-3">
               {mockTopPerformers.map((stock, idx) => (
-                <motion.div 
+                <motion.div
                   key={stock.symbol}
                   className="d-flex align-items-center justify-content-between p-2 rounded-3"
                   style={{ border: '1px solid transparent' }}
@@ -182,11 +182,11 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
                     return (
                       <tr key={tx.id}>
                         <td>
-                          <span 
-                            className={`badge px-2 py-1 fw-bold`} 
-                            style={{ 
-                              fontSize: '0.7rem', 
-                              backgroundColor: isBuy ? 'var(--green-success-light)' : 'var(--red-danger-light)', 
+                          <span
+                            className={`badge px-2 py-1 fw-bold`}
+                            style={{
+                              fontSize: '0.7rem',
+                              backgroundColor: isBuy ? 'var(--green-success-light)' : 'var(--red-danger-light)',
                               color: isBuy ? 'var(--green-success)' : 'var(--red-danger)',
                               borderRadius: '4px'
                             }}
