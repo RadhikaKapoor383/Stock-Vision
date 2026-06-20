@@ -29,7 +29,7 @@ export default function AllocationChart() {
       <h5 className="mb-1 fw-bold">Portfolio Allocation</h5>
       <p className="text-muted mb-4" style={{ fontSize: '0.8rem' }}>Sector-wise distribution of assets</p>
 
-      <div className="d-flex flex-column align-items-center gap-4" style={{ overflow: 'hidden' }}>
+      <div className="d-flex flex-column align-items-center gap-4" style={{ overflow: 'hidden', minWidth: 0 }}>
         <div
           className="flex-shrink-0"
           style={{
@@ -37,9 +37,10 @@ export default function AllocationChart() {
             maxWidth: 250,
             aspectRatio: '1 / 1',
             minHeight: 180,
+            minWidth: 180,
           }}
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={180} minHeight={180} debounce={50}>
             <PieChart>
               <Pie
                 data={mockPortfolioAllocation}

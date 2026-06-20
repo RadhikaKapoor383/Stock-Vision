@@ -90,14 +90,15 @@ export default function PortfolioChart({ currentValue }) {
         </div>
       </div>
 
-      <div style={{
-        width: '100%',
-        height: 'clamp(250px, 45vw, 300px)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div
+        style={{
+          width: '100%',
+          minWidth: 0,
+          height: 'clamp(260px, 45vw, 320px)',
+          minHeight: 260,
+        }}
+      >
+        <ResponsiveContainer width="100%" height="100%" minWidth={240} minHeight={260} debounce={50}>
           <AreaChart
             data={data}
             margin={{ top: 10, right: 10, left: 20, bottom: 0 }}
