@@ -38,23 +38,6 @@ export default function Navbar({
             </div>
             <span className="fw-bold mb-0 text-primary-custom" style={{ fontSize: '1.05rem', letterSpacing: '-0.5px', color: 'var(--text-primary)' }}>Stock Vision</span>
           </div>
-
-          {/* Search Bar */}
-          <div className="d-none d-sm-flex align-items-center" style={{ minWidth: '260px' }}>
-            <div className="input-group rounded-3" style={{ border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
-              <span className="input-group-text bg-transparent border-0 text-muted ps-3 pr-2">
-                <FiSearch size={18} />
-              </span>
-              <input 
-                type="text" 
-                className="form-control bg-transparent border-0 ps-1 py-2 text-primary-custom" 
-                placeholder="Search symbol, transactions..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ boxShadow: 'none', color: 'var(--text-primary)', fontSize: '0.875rem' }}
-              />
-            </div>
-          </div>
         </div>
 
         {/* Right Side: Action Controls & Profile */}
