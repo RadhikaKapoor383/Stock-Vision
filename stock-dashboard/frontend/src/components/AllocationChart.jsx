@@ -25,37 +25,42 @@ export default function AllocationChart() {
   };
 
   return (
-    <div className="premium-card h-100">
+    <div className="premium-card h-95">
       <h5 className="mb-1 fw-bold">Portfolio Allocation</h5>
       <p className="text-muted mb-4" style={{ fontSize: '0.8rem' }}>Sector-wise distribution of assets</p>
 
-      <div className="row align-items-center">
-        {/* Recharts Donut Chart */}
-        <div className="col-12 col-md-5 mb-4 mb-md-0 d-flex justify-content-center">
-          <div style={{ width: '100%', height: 200, maxWidth: 180 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={mockPortfolioAllocation}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={75}
-                  paddingAngle={4}
-                  dataKey="percentage"
-                >
-                  {mockPortfolioAllocation.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+      <div className="d-flex flex-column align-items-center gap-4" style={{ overflow: 'hidden' }}>
+        <div
+          className="flex-shrink-0"
+          style={{
+            width: '100%',
+            maxWidth: 250,
+            aspectRatio: '1 / 1',
+            minHeight: 180,
+          }}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={mockPortfolioAllocation}
+                cx="50%"
+                cy="50%"
+                innerRadius="60%"
+                outerRadius="85%"
+                paddingAngle={4}
+                dataKey="percentage"
+              >
+                {mockPortfolioAllocation.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
 
         {/* Beautiful Animated Progress Bars */}
-        <div className="col-12 col-md-7">
+        <div style={{ width: '100%', minWidth: 0 }}>
           <div className="d-flex flex-column gap-3">
             {mockPortfolioAllocation.map((item, index) => (
               <div key={item.name}>
@@ -68,7 +73,7 @@ export default function AllocationChart() {
                 <div 
                   className="rounded-pill" 
                   style={{ 
-                    height: '8px', 
+                    height: '6px', 
                     backgroundColor: 'var(--bg-tertiary)',
                     overflow: 'hidden' 
                   }}
