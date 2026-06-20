@@ -33,7 +33,7 @@ export default function App() {
     return localStorage.getItem('theme') || 'light';
   });
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('activeTab') || 'dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -46,6 +46,11 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Persist activeTab
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   // Persist User Profile
   useEffect(() => {
@@ -82,6 +87,7 @@ export default function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     localStorage.setItem('isLoggedIn', 'false');
+    localStorage.removeItem('activeTab');
     setActiveTab('dashboard');
   };
 
