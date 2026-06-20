@@ -16,7 +16,7 @@ export default function NewsCard() {
   }, []);
 
   return (
-    <div className="premium-card h-100">
+    <div className="premium-card h-100 news-card-shell">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h5 className="mb-1 fw-bold">Market News</h5>
@@ -44,7 +44,7 @@ export default function NewsCard() {
               target="_blank"
               rel="noopener noreferrer"
               key={article.id}
-              className="d-flex flex-column flex-sm-row gap-3 text-decoration-none rounded-3 p-2 border border-transparent"
+              className="d-flex flex-column flex-sm-row gap-3 text-decoration-none rounded-3 p-2 border border-transparent news-card-item"
               style={{ color: 'inherit', transition: 'all var(--transition-fast)' }}
               whileHover={{ scale: 1.01, backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
               initial={{ opacity: 0, x: -10 }}
@@ -52,7 +52,7 @@ export default function NewsCard() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <div 
-                className="flex-shrink-0 rounded-3 overflow-hidden" 
+                className="flex-shrink-0 rounded-3 overflow-hidden news-card-image" 
                 style={{ width: '100%', height: '120px', maxWidth: '140px', minWidth: '100px' }}
               >
                 <img 
@@ -63,7 +63,7 @@ export default function NewsCard() {
                 />
               </div>
 
-              <div className="d-flex flex-column justify-content-between flex-grow-1">
+              <div className="d-flex flex-column justify-content-between flex-grow-1 news-card-content">
                 <div>
                   <span 
                     className="badge px-2 py-1 mb-2 fw-semibold text-capitalize" 
@@ -75,7 +75,7 @@ export default function NewsCard() {
                     {article.headline}
                   </h6>
                 </div>
-                <div className="d-flex justify-content-between align-items-center mt-2 text-muted" style={{ fontSize: '0.75rem' }}>
+                <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 text-muted gap-2" style={{ fontSize: '0.75rem' }}>
                   <span className="d-flex align-items-center gap-1">
                     <FiClock size={12} />
                     {article.time}
@@ -91,12 +91,34 @@ export default function NewsCard() {
       </div>
 
       <style>{`
+        .news-card-shell {
+          overflow: hidden;
+        }
+
+        .news-card-item {
+          overflow: hidden;
+          will-change: transform;
+        }
+
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;  
           overflow: hidden;
         }
+
+        @media (max-width: 575.98px) {
+          .news-card-image {
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 160px !important;
+          }
+
+          .news-card-content {
+            min-width: 0;
+          }
+        }
+
         .hover-purple:hover { color: var(--accent-purple) !important; }
         .skeleton {
           background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
