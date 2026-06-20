@@ -1,4 +1,4 @@
-const API_KEY = import.meta.env.API_KEY;
+const API_KEY = import.meta.env.VITE_API_KEY;
 const BASE_URL = 'https://finnhub.io/api/v1';
 
 export async function fetchQuote(symbol) {
