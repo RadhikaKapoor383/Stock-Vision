@@ -1,0 +1,11 @@
+/* Reset default styles */
+body {
+  margin: 0;
+  padding: 0;
+}
+#root {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-inline: none !important;
+}
