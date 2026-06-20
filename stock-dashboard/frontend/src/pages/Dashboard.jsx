@@ -11,8 +11,9 @@ import WatchlistTable from '../components/WatchlistTable';
 import NewsCard from '../components/NewsCard';
 import { mockMarketOverview, mockTopPerformers, mockTransactions } from '../data/mockData';
 import { fetchMarketOverview, fetchTopPerformers, fetchPortfolioStats } from '../services/finnhub';
+import { seedIfEmpty } from '../services/transactionStore';
 
-export default function Dashboard({ userProfile, searchQuery = '' }) {
+export default function Dashboard({ userProfile, setUserProfile, searchQuery = '' }) {
   const [marketOverview, setMarketOverview] = useState(mockMarketOverview);
   const [topPerformers, setTopPerformers] = useState(mockTopPerformers);
   const [portfolioStats, setPortfolioStats] = useState(null); // null = still loading
@@ -28,7 +29,14 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
       .catch(() => { });
 
     fetchPortfolioStats(userProfile.availableCash)
-      .then(data => setPortfolioStats(data))
+      .then(data => {
+        setPortfolioStats(data);
+        // Persist live stats into the profile (and therefore localStorage)
+        // so other tabs/components see the same up-to-date numbers.
+        if (setUserProfile) {
+          setUserProfile(prev => ({ ...prev, ...data }));
+        }
+      })
       .catch(() => { });
   }, []);
 
@@ -75,11 +83,12 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
     }
   ];
 
-  const filteredTransactions = mockTransactions.filter(tx =>
+  const liveTransactions = seedIfEmpty(mockTransactions);
+  const filteredTransactions = liveTransactions.filter(tx =>
     tx.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).slice(0, 5);
 
   return (
     <div className="d-flex flex-column gap-4">
@@ -129,7 +138,7 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
 
       {/* Charts */}
       <div className="row g-4">
-        <div className="col-12 col-xl-8"><PortfolioChart /></div>
+        <div className="col-12 col-xl-8"><PortfolioChart currentValue={stats.portfolioValue} /></div>
         <div className="col-12 col-xl-4"><AllocationChart /></div>
       </div>
 
