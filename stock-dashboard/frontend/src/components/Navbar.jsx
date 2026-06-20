@@ -29,14 +29,45 @@ export default function Navbar({
       <div className="container-fluid p-0 d-flex justify-content-between align-items-center">
         
         {/* Left Side: Brand Logo (on mobile) & Search Bar */}
-        <div className="d-flex align-items-center gap-3 flex-grow-1 flex-md-grow-0" style={{ maxWidth: '50%' }}>
+        <div className="d-flex align-items-center gap-3 flex-grow-1" style={{ maxWidth: '480px' }}>
           
           {/* Logo Name on Navbar (visible on smaller screens when sidebar is hidden) */}
-          <div className="d-flex align-items-center gap-2 d-lg-none ms-0 ms-sm-5">
+          <div className="d-flex align-items-center gap-2 d-lg-none flex-shrink-0 ms-0 ms-sm-5">
             <div className="d-flex align-items-center justify-content-center rounded-3 bg-purple text-white" style={{ width: '32px', height: '32px', backgroundColor: 'var(--accent-purple)' }}>
               <FiTrendingUp size={16} color="#fff" />
             </div>
-            <span className="fw-bold mb-0 text-primary-custom" style={{ fontSize: '1.05rem', letterSpacing: '-0.5px', color: 'var(--text-primary)' }}>Stock Vision</span>
+            <span className="fw-bold mb-0 text-primary-custom d-none d-sm-inline" style={{ fontSize: '1.05rem', letterSpacing: '-0.5px', color: 'var(--text-primary)' }}>Stock Vision</span>
+          </div>
+
+          {/* Search Bar */}
+          <div className="position-relative flex-grow-1 d-none d-md-block">
+            <FiSearch 
+              size={15} 
+              style={{ 
+                position: 'absolute', 
+                left: '12px', 
+                top: '50%', 
+                transform: 'translateY(-50%)',
+                color: 'var(--text-light)',
+                pointerEvents: 'none'
+              }} 
+            />
+            <input
+              type="text"
+              className="form-control form-control-premium"
+              placeholder="Search stocks, transactions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                paddingLeft: '36px',
+                fontSize: '0.85rem',
+                height: '38px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                color: 'var(--text-primary)',
+              }}
+            />
           </div>
         </div>
 
@@ -77,7 +108,7 @@ export default function Navbar({
               <FiMessageSquare size={18} />
               <span 
                 className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
-                style={{ width: '8px', height: '8px', transform: 'translate(-12px, 2px) !important' }}
+                style={{ width: '8px', height: '8px', transform: 'translate(-12px, 2px)' }}
               ></span>
             </button>
 
@@ -189,7 +220,7 @@ export default function Navbar({
           </div>
 
           {/* Vertical Divider */}
-          <div className="vr d-none d-sm-block text-muted mx-1" style={{ height: '24px' }}></div>
+          <div className="vr d-none d-sm-block text-muted mx-1" style={{ height: '36px' }}></div>
 
           {/* User Profile Dropdown */}
           <div className="position-relative">

@@ -252,7 +252,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <div className={`main-content`}>
+      <div className="main-content">
         {/* Top Navbar */}
         <Navbar 
           userProfile={userProfile}

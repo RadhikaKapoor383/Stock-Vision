@@ -40,13 +40,12 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, set
 
       {/* Sidebar Container */}
       <div 
-        className={`sidebar-container position-fixed top-0 start-0 h-100 d-flex flex-column`}
+        className={`sidebar-container position-fixed top-0 start-0 h-100 d-flex flex-column${isOpen ? ' sidebar-open' : ''}`}
         style={{
           width: 'var(--sidebar-width)',
           backgroundColor: 'var(--bg-secondary)',
           borderRight: '1px solid var(--border-color)',
           zIndex: 1045,
-          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform var(--transition-normal)',
         }}
       >
@@ -113,6 +112,14 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, set
         @media (min-width: 992px) {
           .sidebar-container {
             transform: translateX(0) !important;
+          }
+        }
+        @media (max-width: 991.98px) {
+          .sidebar-container {
+            transform: translateX(-100%);
+          }
+          .sidebar-container.sidebar-open {
+            transform: translateX(0);
           }
         }
         .nav-link:hover {

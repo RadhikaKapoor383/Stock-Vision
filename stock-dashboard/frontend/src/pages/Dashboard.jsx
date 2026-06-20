@@ -1,60 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   FiDollarSign, FiBriefcase, FiTrendingUp, FiActivity, FiLayers,
-  FiArrowUpRight, FiArrowDownRight 
+  FiArrowUpRight, FiArrowDownRight
 } from 'react-icons/fi';
 import StatsCard from '../components/StatsCard';
 import PortfolioChart from '../components/PortfolioChart';
 import AllocationChart from '../components/AllocationChart';
 import WatchlistTable from '../components/WatchlistTable';
 import NewsCard from '../components/NewsCard';
-import { 
-  mockMarketOverview, 
-  mockTopPerformers, 
-  mockTransactions 
-} from '../data/mockData';
+import { mockMarketOverview, mockTopPerformers, mockTransactions } from '../data/mockData';
+import { fetchMarketOverview, fetchTopPerformers, fetchPortfolioStats } from '../services/finnhub';
 
 export default function Dashboard({ userProfile, searchQuery = '' }) {
+  const [marketOverview, setMarketOverview] = useState(mockMarketOverview);
+  const [topPerformers, setTopPerformers] = useState(mockTopPerformers);
+  const [portfolioStats, setPortfolioStats] = useState(null); // null = still loading
+
+  useEffect(() => {
+    // Fire all three in parallel
+    fetchMarketOverview()
+      .then(data => setMarketOverview(data))
+      .catch(() => { });
+
+    fetchTopPerformers()
+      .then(data => setTopPerformers(data))
+      .catch(() => { });
+
+    fetchPortfolioStats(userProfile.availableCash)
+      .then(data => setPortfolioStats(data))
+      .catch(() => { });
+  }, []);
+
+  // Merge live portfolio stats into userProfile (fall back to mock if API failed)
+  const stats = portfolioStats
+    ? { ...userProfile, ...portfolioStats }
+    : userProfile;
+
   const statsItems = [
     {
       title: "Portfolio Value",
-      value: `$${userProfile.portfolioValue.toLocaleString()}`,
-      change: `+${userProfile.portfolioChange}%`,
-      isPositive: true,
+      value: `$${stats.portfolioValue.toLocaleString()}`,
+      change: `${stats.portfolioChange >= 0 ? '+' : ''}${stats.portfolioChange}%`,
+      isPositive: stats.portfolioChange >= 0,
       icon: FiBriefcase,
     },
     {
       title: "Today's P/L",
-      value: `+$${userProfile.todayProfitLoss.toLocaleString()}`,
-      change: `+${userProfile.todayProfitLossChange}%`,
-      isPositive: true,
+      value: `${stats.todayProfitLoss >= 0 ? '+' : ''}$${Math.abs(stats.todayProfitLoss).toLocaleString()}`,
+      change: `${stats.todayProfitLossChange >= 0 ? '+' : ''}${stats.todayProfitLossChange}%`,
+      isPositive: stats.todayProfitLoss >= 0,
       icon: FiTrendingUp,
     },
     {
       title: "Total Investments",
-      value: `$${userProfile.totalInvestments.toLocaleString()}`,
+      value: `$${stats.totalInvestments.toLocaleString()}`,
       change: "+8.3%",
       isPositive: true,
       icon: FiDollarSign,
     },
     {
       title: "Available Cash",
-      value: `$${userProfile.availableCash.toLocaleString()}`,
+      value: `$${stats.availableCash.toLocaleString()}`,
       change: "-2.4%",
       isPositive: false,
       icon: FiActivity,
     },
     {
       title: "Holdings",
-      value: `${userProfile.activeHoldings}`,
+      value: `${stats.activeHoldings}`,
       change: "+1 new",
       isPositive: true,
       icon: FiLayers,
     }
   ];
 
-  const filteredTransactions = mockTransactions.filter(tx => 
+  const filteredTransactions = mockTransactions.filter(tx =>
     tx.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.status.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,22 +93,22 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
         </p>
       </div>
 
-      {/* Statistics Cards Row — responsive: 2 cols on xs, 3 on sm, 5 on lg */}
+      {/* Statistics Cards */}
       <div className="row row-cols-2 row-cols-sm-3 row-cols-lg-5 g-3">
         {statsItems.map((item, idx) => (
           <div key={item.title} className="col">
-            <StatsCard {...item} delay={idx * 0.05} />
+            <StatsCard {...item} delay={idx * 0.05} loading={!portfolioStats} />
           </div>
         ))}
       </div>
 
-      {/* Market Indices Section */}
+      {/* Market Overview */}
       <div>
         <h6 className="fw-bold text-secondary mb-3" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Market Overview</h6>
         <div className="row row-cols-2 row-cols-md-4 g-3">
-          {mockMarketOverview.map((item, idx) => (
+          {marketOverview.map((item, idx) => (
             <div key={item.name} className="col">
-              <motion.div 
+              <motion.div
                 className="premium-card p-3 d-flex justify-content-between align-items-center"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -106,29 +127,25 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Charts */}
       <div className="row g-4">
-        <div className="col-12 col-xl-8">
-          <PortfolioChart />
-        </div>
-        <div className="col-12 col-xl-4">
-          <AllocationChart />
-        </div>
+        <div className="col-12 col-xl-8"><PortfolioChart /></div>
+        <div className="col-12 col-xl-4"><AllocationChart /></div>
       </div>
 
-      {/* Watchlist & Top Performing Section */}
+      {/* Watchlist & Top Performers */}
       <div className="row g-4">
         <div className="col-12 col-xl-8">
           <WatchlistTable searchQuery={searchQuery} />
         </div>
-        
+
         <div className="col-12 col-xl-4">
           <div className="premium-card h-100">
             <h5 className="mb-1 fw-bold">Top Performing Stocks</h5>
             <p className="text-muted mb-4" style={{ fontSize: '0.8rem' }}>Highest daily gainers in your watchlists</p>
             <div className="d-flex flex-column gap-3">
-              {mockTopPerformers.map((stock, idx) => (
-                <motion.div 
+              {topPerformers.map((stock, idx) => (
+                <motion.div
                   key={stock.symbol}
                   className="d-flex align-items-center justify-content-between p-2 rounded-3"
                   style={{ border: '1px solid transparent' }}
@@ -143,9 +160,9 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
                     </div>
                   </div>
                   <div className="text-end">
-                    <div className="fw-bold" style={{ fontSize: '0.9rem' }}>${stock.price}</div>
-                    <span className="trend-indicator trend-up" style={{ fontSize: '0.75rem' }}>
-                      <FiArrowUpRight size={12} />
+                    <div className="fw-bold" style={{ fontSize: '0.9rem' }}>${stock.price?.toFixed(2)}</div>
+                    <span className={`trend-indicator ${stock.isPositive ? 'trend-up' : 'trend-down'}`} style={{ fontSize: '0.75rem' }}>
+                      {stock.isPositive ? <FiArrowUpRight size={12} /> : <FiArrowDownRight size={12} />}
                       {stock.gain}
                     </span>
                   </div>
@@ -156,7 +173,7 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
         </div>
       </div>
 
-      {/* Recent Transactions & Market News */}
+      {/* Recent Transactions & News */}
       <div className="row g-4">
         <div className="col-12 col-xl-8">
           <div className="premium-card h-100">
@@ -180,11 +197,11 @@ export default function Dashboard({ userProfile, searchQuery = '' }) {
                     return (
                       <tr key={tx.id}>
                         <td>
-                          <span 
-                            className="badge px-2 py-1 fw-bold" 
-                            style={{ 
-                              fontSize: '0.7rem', 
-                              backgroundColor: isBuy ? 'var(--green-success-light)' : 'var(--red-danger-light)', 
+                          <span
+                            className="badge px-2 py-1 fw-bold"
+                            style={{
+                              fontSize: '0.7rem',
+                              backgroundColor: isBuy ? 'var(--green-success-light)' : 'var(--red-danger-light)',
                               color: isBuy ? 'var(--green-success)' : 'var(--red-danger)',
                               borderRadius: '4px'
                             }}

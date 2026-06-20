@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { FiArrowUpRight, FiArrowDownRight, FiChevronUp, FiChevronDown, FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiArrowUpRight, FiArrowDownRight, FiChevronUp, FiChevronDown, FiPlus, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 import { mockWatchlist } from '../data/mockData';
+import { fetchMultipleQuotes } from '../services/finnhub';
+
+const REFRESH_INTERVAL = 30000; // refresh every 30 seconds
 
 const STORAGE_KEY = 'stockvision_watchlist';
 
@@ -27,11 +30,37 @@ export default function WatchlistTable({ searchQuery = '' }) {
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newChange, setNewChange] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [apiError, setApiError] = useState('');
 
-  // Persist to localStorage whenever list changes
+  // Fetch live prices and merge into list
+  const refreshPrices = useCallback(async (currentList) => {
+    setLoading(true);
+    setApiError('');
+    try {
+      const symbols = currentList.map(s => s.symbol);
+      const quotes = await fetchMultipleQuotes(symbols);
+      setList(prev => prev.map(stock => {
+        const live = quotes.find(q => q.symbol === stock.symbol);
+        if (!live || !live.price) return stock;
+        return { ...stock, price: live.price, change: live.change, changePercent: live.changePercent, isPositive: live.isPositive };
+      }));
+      setLastUpdated(new Date());
+    } catch (err) {
+      setApiError('Live prices unavailable. Showing last known data.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch on mount + every 30s
   useEffect(() => {
-    saveWatchlist(list);
-  }, [list]);
+    const initial = loadWatchlist();
+    refreshPrices(initial);
+    const interval = setInterval(() => refreshPrices(loadWatchlist()), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, [refreshPrices]);
 
   const handleSort = (key) => {
     let direction = 'ascending';
@@ -96,9 +125,23 @@ export default function WatchlistTable({ searchQuery = '' }) {
       <div className="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
           <h5 className="mb-1 fw-bold">Watchlist</h5>
-          <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>Monitor real-time prices of your favorite tickers</p>
+          <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>
+            {lastUpdated
+              ? `Live prices · Updated ${lastUpdated.toLocaleTimeString()}`
+              : 'Monitor real-time prices of your favorite tickers'}
+          </p>
         </div>
         <div className="d-flex gap-2">
+          <button
+            className="btn d-flex align-items-center gap-1"
+            style={{ padding: '6px 12px', fontSize: '0.8rem', color: 'var(--text-light)', border: '1px solid var(--border-color)', borderRadius: '8px' }}
+            onClick={() => refreshPrices(list)}
+            disabled={loading}
+            title="Refresh prices"
+          >
+            <FiRefreshCw size={13} className={loading ? 'spin' : ''} />
+            {loading ? 'Updating...' : 'Refresh'}
+          </button>
           <button
             className="btn btn-premium-outline d-flex align-items-center gap-1"
             style={{ padding: '6px 12px', fontSize: '0.8rem' }}
@@ -117,6 +160,13 @@ export default function WatchlistTable({ searchQuery = '' }) {
           </button>
         </div>
       </div>
+
+      {/* API Error Banner */}
+      {apiError && (
+        <div className="alert alert-warning py-2 mb-3 d-flex align-items-center gap-2" style={{ fontSize: '0.8rem', borderRadius: '10px' }}>
+          <span>⚠️</span> {apiError}
+        </div>
+      )}
 
       {/* Add Stock Form */}
       {addMode && (
@@ -253,8 +303,13 @@ export default function WatchlistTable({ searchQuery = '' }) {
       </div>
 
       <p className="text-muted mt-3 mb-0" style={{ fontSize: '0.72rem' }}>
-        {list.length} stock{list.length !== 1 ? 's' : ''} tracked · Changes saved automatically
+        {list.length} stock{list.length !== 1 ? 's' : ''} tracked · Auto-refreshes every 30s
       </p>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+      `}</style>
     </div>
   );
 }
