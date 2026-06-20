@@ -98,6 +98,7 @@ export async function fetchPortfolioStats(availableCash = 24500) {
     todayProfitLossChange: parseFloat(todayPLChange.toFixed(2)),
     portfolioChange: parseFloat(portfolioChange.toFixed(2)),
     portfolioChangeAmount: Math.round(todayPL),
+    activeHoldings: symbols.length,
   };
 }
 
