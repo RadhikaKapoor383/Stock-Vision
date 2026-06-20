@@ -3,11 +3,15 @@
 // (e.g. Alpaca). This gives a real, user-maintained log stored locally
 // instead of a static mock list.
 
-const STORAGE_KEY = 'transactions';
+const STORAGE_PREFIX = 'transactions';
 
-export function getTransactions() {
+function getStorageKey(accountKey = 'default') {
+  return `${STORAGE_PREFIX}:${accountKey || 'default'}`;
+}
+
+export function getTransactions(accountKey) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getStorageKey(accountKey));
     return raw ? JSON.parse(raw) : null; // null = never seeded
   } catch {
     return null;
@@ -16,24 +20,25 @@ export function getTransactions() {
 
 // Seeds localStorage with the given defaults only the first time
 // (i.e. if nothing has been saved yet). Returns the active list.
-export function seedIfEmpty(defaults) {
-  const existing = getTransactions();
+export function seedIfEmpty(defaults, accountKey) {
+  const existing = getTransactions(accountKey);
   if (existing !== null) return existing;
-  saveTransactions(defaults);
-  return defaults;
+  const seeded = defaults || [];
+  saveTransactions(seeded, accountKey);
+  return seeded;
 }
 
-function saveTransactions(list) {
+function saveTransactions(list, accountKey) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    localStorage.setItem(getStorageKey(accountKey), JSON.stringify(list));
   } catch {
     // ignore storage errors
   }
 }
 
 // tx: { type, symbol, quantity, price, status? , date? }
-export function addTransaction(tx) {
-  const list = getTransactions() || [];
+export function addTransaction(tx, accountKey) {
+  const list = getTransactions(accountKey) || [];
   const newTx = {
     id: `TX${Date.now()}`,
     date: new Date().toISOString().slice(0, 10),
@@ -44,17 +49,17 @@ export function addTransaction(tx) {
     price: Number(tx.price),
   };
   const updated = [newTx, ...list];
-  saveTransactions(updated);
+  saveTransactions(updated, accountKey);
   return updated;
 }
 
-export function deleteTransaction(id) {
-  const list = getTransactions() || [];
+export function deleteTransaction(id, accountKey) {
+  const list = getTransactions(accountKey) || [];
   const updated = list.filter(t => t.id !== id);
-  saveTransactions(updated);
+  saveTransactions(updated, accountKey);
   return updated;
 }
 
-export function clearTransactions() {
-  localStorage.removeItem(STORAGE_KEY);
+export function clearTransactions(accountKey) {
+  localStorage.removeItem(getStorageKey(accountKey));
 }
