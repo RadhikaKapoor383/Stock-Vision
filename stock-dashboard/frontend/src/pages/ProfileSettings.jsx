@@ -10,6 +10,7 @@ export default function ProfileSettings({ userProfile, setUserProfile }) {
     role: userProfile.role,
     country: userProfile.country,
     currency: userProfile.currency,
+    availableCash: userProfile.availableCash,
   });
 
   const [message, setMessage] = useState('');
@@ -37,6 +38,7 @@ export default function ProfileSettings({ userProfile, setUserProfile }) {
     const updatedProfile = {
       ...userProfile,
       ...formData,
+      availableCash: parseFloat(formData.availableCash) || 0,
       initials: initials,
     };
 
@@ -213,6 +215,25 @@ export default function ProfileSettings({ userProfile, setUserProfile }) {
                       onChange={handleChange}
                     />
                   </div>
+                </div>
+
+                {/* Available Cash */}
+                <div className="col-12 col-md-6">
+                  <label className="form-label text-secondary fw-semibold" style={{ fontSize: '0.85rem' }}>Available Cash</label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-transparent border-end-0 text-muted">
+                      <FiDollarSign />
+                    </span>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      name="availableCash"
+                      className="form-control form-control-premium border-start-0 ps-0" 
+                      value={formData.availableCash}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <span className="text-muted" style={{ fontSize: '0.75rem' }}>This is account/cash-balance data — no market API can fetch it, so it's entered manually here.</span>
                 </div>
               </div>
 
