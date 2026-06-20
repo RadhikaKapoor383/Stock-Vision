@@ -13,20 +13,29 @@ import { mockMarketOverview, mockTopPerformers, mockTransactions } from '../data
 import { fetchMarketOverview, fetchTopPerformers, fetchPortfolioStats } from '../services/finnhub';
 import { seedIfEmpty } from '../services/transactionStore';
 
-export default function Dashboard({ userProfile, setUserProfile, searchQuery = '' }) {
+export default function Dashboard({ userProfile, setUserProfile, searchQuery = '', transactions }) {
   const [marketOverview, setMarketOverview] = useState(mockMarketOverview);
   const [topPerformers, setTopPerformers] = useState(mockTopPerformers);
   const [portfolioStats, setPortfolioStats] = useState(null); // null = still loading
+  const [apiNotice, setApiNotice] = useState('');
 
   useEffect(() => {
+    if (!import.meta.env.VITE_API_KEY) {
+      setApiNotice('Live market data is unavailable because VITE_API_KEY is missing. Showing demo data.');
+    }
+
     // Fire all three in parallel
     fetchMarketOverview()
       .then(data => setMarketOverview(data))
-      .catch(() => { });
+      .catch(() => {
+        setApiNotice('Live market data could not be loaded. Showing demo data instead.');
+      });
 
     fetchTopPerformers()
       .then(data => setTopPerformers(data))
-      .catch(() => { });
+      .catch(() => {
+        setApiNotice('Live market data could not be loaded. Showing demo data instead.');
+      });
 
     fetchPortfolioStats(userProfile.availableCash)
       .then(data => {
@@ -37,8 +46,10 @@ export default function Dashboard({ userProfile, setUserProfile, searchQuery = '
           setUserProfile(prev => ({ ...prev, ...data }));
         }
       })
-      .catch(() => { });
-  }, []);
+      .catch(() => {
+        setApiNotice('Live portfolio stats could not be loaded. Showing demo data instead.');
+      });
+  }, [setUserProfile, userProfile.availableCash]);
 
   // Merge live portfolio stats into userProfile (fall back to mock if API failed)
   const stats = portfolioStats
@@ -83,7 +94,7 @@ export default function Dashboard({ userProfile, setUserProfile, searchQuery = '
     }
   ];
 
-  const liveTransactions = seedIfEmpty(mockTransactions);
+  const liveTransactions = transactions ?? seedIfEmpty(mockTransactions, userProfile.email || userProfile.name);
   const filteredTransactions = liveTransactions.filter(tx =>
     tx.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     tx.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -100,6 +111,11 @@ export default function Dashboard({ userProfile, setUserProfile, searchQuery = '
         <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
           Here is what's happening with your portfolio today.
         </p>
+        {apiNotice && (
+          <div className="mt-3 alert alert-warning py-2 px-3 mb-0" style={{ fontSize: '0.8rem' }}>
+            {apiNotice}
+          </div>
+        )}
       </div>
 
       {/* Statistics Cards */}

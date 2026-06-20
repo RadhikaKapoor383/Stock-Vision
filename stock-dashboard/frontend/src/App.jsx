@@ -20,14 +20,59 @@ import { seedIfEmpty, addTransaction, deleteTransaction } from './services/trans
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/dashboard.css';
 
+function getAccountKey(email) {
+  return (email || 'default').trim().toLowerCase();
+}
+
+function profileStorageKey(accountKey) {
+  return `userProfile:${accountKey}`;
+}
+
+function loadProfile(accountKey) {
+  try {
+    const saved = localStorage.getItem(profileStorageKey(accountKey));
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function createProfile({ name, email }) {
+  const cleanName = (name || email || mockUserProfile.name).trim();
+  const initials = cleanName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  return {
+    ...mockUserProfile,
+    name: cleanName,
+    email,
+    initials: initials || mockUserProfile.initials,
+  };
+}
+
+function saveProfile(accountKey, profile) {
+  localStorage.setItem(profileStorageKey(accountKey), JSON.stringify(profile));
+}
+
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('isLoggedIn') === 'true';
   });
+
+  const [activeAccount, setActiveAccount] = useState(() => {
+    const storedEmail = localStorage.getItem('activeAccount');
+    return storedEmail ? getAccountKey(storedEmail) : getAccountKey(mockUserProfile.email);
+  });
   
   const [userProfile, setUserProfile] = useState(() => {
-    const saved = localStorage.getItem('userProfile');
-    return saved ? JSON.parse(saved) : mockUserProfile;
+    const savedProfile = loadProfile(activeAccount);
+    if (savedProfile) return savedProfile;
+    return createProfile({ name: mockUserProfile.name, email: mockUserProfile.email });
   });
 
   const [theme, setTheme] = useState(() => {
@@ -44,19 +89,19 @@ export default function App() {
 
   // Transaction log: real, user-maintained, stored locally (no free
   // brokerage API exists to fetch real buy/sell history)
-  const [transactions, setTransactions] = useState(() => seedIfEmpty(mockTransactions));
+  const [transactions, setTransactions] = useState(() => seedIfEmpty(mockTransactions, activeAccount));
   const [newTx, setNewTx] = useState({ type: 'Buy', symbol: '', quantity: '', price: '' });
 
   const handleAddTransaction = (e) => {
     e.preventDefault();
     if (!newTx.symbol.trim() || !newTx.quantity || !newTx.price) return;
-    const updated = addTransaction(newTx);
+    const updated = addTransaction(newTx, activeAccount);
     setTransactions(updated);
     setNewTx({ type: 'Buy', symbol: '', quantity: '', price: '' });
   };
 
   const handleDeleteTransaction = (id) => {
-    setTransactions(deleteTransaction(id));
+    setTransactions(deleteTransaction(id, activeAccount));
   };
 
   // Sync theme to DOM attributes
@@ -72,14 +117,30 @@ export default function App() {
 
   // Persist User Profile
   useEffect(() => {
+    saveProfile(activeAccount, userProfile);
     localStorage.setItem('userProfile', JSON.stringify(userProfile));
-  }, [userProfile]);
+  }, [userProfile, activeAccount]);
+
+  useEffect(() => {
+    localStorage.setItem('activeAccount', activeAccount);
+  }, [activeAccount]);
+
+  useEffect(() => {
+    setTransactions(seedIfEmpty(mockTransactions, activeAccount));
+  }, [activeAccount]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const handleLogin = (credentials) => {
+    const accountKey = getAccountKey(credentials.email);
+    const existingProfile = loadProfile(accountKey);
+    const profile = existingProfile || createProfile({ name: credentials.email.split('@')[0], email: credentials.email });
+
+    setActiveAccount(accountKey);
+    setUserProfile(profile);
+    setTransactions(seedIfEmpty(mockTransactions, accountKey));
     setIsLoggedIn(true);
     localStorage.setItem('isLoggedIn', 'true');
   };
@@ -91,13 +152,14 @@ export default function App() {
       : words[0][0].toUpperCase();
 
     const newProfile = {
-      ...mockUserProfile,
-      name: signupData.name,
-      email: signupData.email,
-      initials: initials,
-      portfolioValue: 154850,
+      ...createProfile({ name: signupData.name, email: signupData.email }),
+      initials,
     };
+    const accountKey = getAccountKey(signupData.email);
+    setActiveAccount(accountKey);
     setUserProfile(newProfile);
+    saveProfile(accountKey, newProfile);
+    setTransactions(seedIfEmpty(mockTransactions, accountKey));
     setIsLoggedIn(true);
     localStorage.setItem('isLoggedIn', 'true');
   };
@@ -105,6 +167,7 @@ export default function App() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     localStorage.setItem('isLoggedIn', 'false');
+    localStorage.removeItem('activeAccount');
     localStorage.removeItem('activeTab');
     setActiveTab('dashboard');
   };
@@ -119,7 +182,7 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard userProfile={userProfile} setUserProfile={setUserProfile} searchQuery={searchQuery} />;
+        return <Dashboard userProfile={userProfile} setUserProfile={setUserProfile} searchQuery={searchQuery} transactions={transactions} accountKey={activeAccount} />;
       case 'portfolio':
         return (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="row g-4">
@@ -323,7 +386,7 @@ export default function App() {
       case 'settings':
         return <ProfileSettings userProfile={userProfile} setUserProfile={setUserProfile} />;
       default:
-        return <Dashboard userProfile={userProfile} setUserProfile={setUserProfile} searchQuery={searchQuery} />;
+        return <Dashboard userProfile={userProfile} setUserProfile={setUserProfile} searchQuery={searchQuery} transactions={transactions} accountKey={activeAccount} />;
     }
   };
 
