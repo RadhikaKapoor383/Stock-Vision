@@ -1,236 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  FiDollarSign, FiBriefcase, FiTrendingUp, FiActivity, FiLayers,
-  FiArrowUpRight, FiArrowDownRight
-} from 'react-icons/fi';
-import StatsCard from '../components/StatsCard';
-import PortfolioChart from '../components/PortfolioChart';
-import AllocationChart from '../components/AllocationChart';
-import WatchlistTable from '../components/WatchlistTable';
-import NewsCard from '../components/NewsCard';
-import { mockMarketOverview, mockTopPerformers, mockTransactions } from '../data/mockData';
-import { fetchMarketOverview, fetchTopPerformers, fetchPortfolioStats } from '../services/finnhub';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 
-export default function Dashboard({ userProfile, searchQuery = '' }) {
-  const [marketOverview, setMarketOverview] = useState(mockMarketOverview);
-  const [topPerformers, setTopPerformers] = useState(mockTopPerformers);
-  const [portfolioStats, setPortfolioStats] = useState(null); // null = still loading
-
-  useEffect(() => {
-    // Fire all three in parallel
-    fetchMarketOverview()
-      .then(data => setMarketOverview(data))
-      .catch(() => { });
-
-    fetchTopPerformers()
-      .then(data => setTopPerformers(data))
-      .catch(() => { });
-
-    fetchPortfolioStats(userProfile.availableCash)
-      .then(data => setPortfolioStats(data))
-      .catch(() => { });
-  }, []);
-
-  // Merge live portfolio stats into userProfile (fall back to mock if API failed)
-  const stats = portfolioStats
-    ? { ...userProfile, ...portfolioStats }
-    : userProfile;
-
-  const statsItems = [
-    {
-      title: "Portfolio Value",
-      value: `$${stats.portfolioValue.toLocaleString()}`,
-      change: `${stats.portfolioChange >= 0 ? '+' : ''}${stats.portfolioChange}%`,
-      isPositive: stats.portfolioChange >= 0,
-      icon: FiBriefcase,
-    },
-    {
-      title: "Today's P/L",
-      value: `${stats.todayProfitLoss >= 0 ? '+' : ''}$${Math.abs(stats.todayProfitLoss).toLocaleString()}`,
-      change: `${stats.todayProfitLossChange >= 0 ? '+' : ''}${stats.todayProfitLossChange}%`,
-      isPositive: stats.todayProfitLoss >= 0,
-      icon: FiTrendingUp,
-    },
-    {
-      title: "Total Investments",
-      value: `$${stats.totalInvestments.toLocaleString()}`,
-      change: "+8.3%",
-      isPositive: true,
-      icon: FiDollarSign,
-    },
-    {
-      title: "Available Cash",
-      value: `$${stats.availableCash.toLocaleString()}`,
-      change: "-2.4%",
-      isPositive: false,
-      icon: FiActivity,
-    },
-    {
-      title: "Holdings",
-      value: `${stats.activeHoldings}`,
-      change: "+1 new",
-      isPositive: true,
-      icon: FiLayers,
-    }
-  ];
-
-  const filteredTransactions = mockTransactions.filter(tx =>
-    tx.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tx.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tx.status.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+export default function StatsCard({ title, value, change, isPositive, icon: Icon, delay, loading }) {
   return (
-    <div className="d-flex flex-column gap-4">
-      {/* Welcome Header */}
-      <div>
-        <h4 className="fw-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-          Welcome back, {userProfile.name}!
-        </h4>
-        <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
-          Here is what's happening with your portfolio today.
-        </p>
+    <motion.div 
+      className="premium-card stats-card h-100"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: delay }}
+    >
+      <div className="d-flex justify-content-between align-items-start mb-2">
+        <span className="stats-title text-secondary fw-semibold">{title}</span>
+        <div 
+          className="stats-icon d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" 
+          style={{ width: '36px', height: '36px', backgroundColor: 'var(--accent-purple-light)', color: 'var(--accent-purple)' }}
+        >
+          <Icon size={16} />
+        </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="row row-cols-2 row-cols-sm-3 row-cols-lg-5 g-3">
-        {statsItems.map((item, idx) => (
-          <div key={item.title} className="col">
-            <StatsCard {...item} delay={idx * 0.05} loading={!portfolioStats} />
+      {loading ? (
+        /* Skeleton shimmer while API loads */
+        <div>
+          <div className="skeleton mb-2" style={{ height: '28px', width: '80%', borderRadius: '6px' }} />
+          <div className="skeleton" style={{ height: '14px', width: '50%', borderRadius: '4px' }} />
+        </div>
+      ) : (
+        <>
+          <div className="d-flex align-items-baseline gap-2">
+            <h3 className="stats-value mb-0 fw-bold" style={{ color: 'var(--text-primary)' }}>
+              {value}
+            </h3>
           </div>
-        ))}
-      </div>
-
-      {/* Market Overview */}
-      <div>
-        <h6 className="fw-bold text-secondary mb-3" style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Market Overview</h6>
-        <div className="row row-cols-2 row-cols-md-4 g-3">
-          {marketOverview.map((item, idx) => (
-            <div key={item.name} className="col">
-              <motion.div
-                className="premium-card p-3 d-flex justify-content-between align-items-center"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: idx * 0.05 }}
-              >
-                <div>
-                  <span className="text-muted fw-semibold" style={{ fontSize: '0.8rem' }}>{item.name}</span>
-                  <div className="fw-bold fs-5 mt-1" style={{ color: 'var(--text-primary)' }}>{item.value}</div>
-                </div>
-                <span className={`badge-status ${item.isPositive ? 'badge-completed' : 'badge-failed'}`}>
-                  {item.change}
-                </span>
-              </motion.div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="row g-4">
-        <div className="col-12 col-xl-8"><PortfolioChart /></div>
-        <div className="col-12 col-xl-4"><AllocationChart /></div>
-      </div>
-
-      {/* Watchlist & Top Performers */}
-      <div className="row g-4">
-        <div className="col-12 col-xl-8">
-          <WatchlistTable searchQuery={searchQuery} />
-        </div>
-
-        <div className="col-12 col-xl-4">
-          <div className="premium-card h-100">
-            <h5 className="mb-1 fw-bold">Top Performing Stocks</h5>
-            <p className="text-muted mb-4" style={{ fontSize: '0.8rem' }}>Highest daily gainers in your watchlists</p>
-            <div className="d-flex flex-column gap-3">
-              {topPerformers.map((stock, idx) => (
-                <motion.div
-                  key={stock.symbol}
-                  className="d-flex align-items-center justify-content-between p-2 rounded-3"
-                  style={{ border: '1px solid transparent' }}
-                  whileHover={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="d-flex align-items-center gap-3">
-                    <div className="stock-logo">{stock.logo}</div>
-                    <div>
-                      <div className="fw-bold" style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{stock.symbol}</div>
-                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>{stock.name}</div>
-                    </div>
-                  </div>
-                  <div className="text-end">
-                    <div className="fw-bold" style={{ fontSize: '0.9rem' }}>${stock.price?.toFixed(2)}</div>
-                    <span className={`trend-indicator ${stock.isPositive ? 'trend-up' : 'trend-down'}`} style={{ fontSize: '0.75rem' }}>
-                      {stock.isPositive ? <FiArrowUpRight size={12} /> : <FiArrowDownRight size={12} />}
-                      {stock.gain}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          <div className="d-flex align-items-center justify-content-between mt-2">
+            <span className={`trend-indicator ${isPositive ? 'trend-up' : 'trend-down'}`} style={{ fontSize: '0.8rem' }}>
+              {isPositive ? <FiTrendingUp size={13} /> : <FiTrendingDown size={13} />}
+              <span>{change}</span>
+            </span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>vs last month</span>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Recent Transactions & News */}
-      <div className="row g-4">
-        <div className="col-12 col-xl-8">
-          <div className="premium-card h-100">
-            <h5 className="mb-1 fw-bold">Recent Transactions</h5>
-            <p className="text-muted mb-4" style={{ fontSize: '0.8rem' }}>Summary of buy and sell activities</p>
-            <div className="custom-table-container">
-              <table className="custom-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Stock</th>
-                    <th style={{ textAlign: 'right' }}>Qty</th>
-                    <th style={{ textAlign: 'right' }}>Price</th>
-                    <th style={{ textAlign: 'right' }} className="d-none d-sm-table-cell">Date</th>
-                    <th style={{ textAlign: 'center' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTransactions.map((tx) => {
-                    const isBuy = tx.type === 'Buy';
-                    return (
-                      <tr key={tx.id}>
-                        <td>
-                          <span
-                            className="badge px-2 py-1 fw-bold"
-                            style={{
-                              fontSize: '0.7rem',
-                              backgroundColor: isBuy ? 'var(--green-success-light)' : 'var(--red-danger-light)',
-                              color: isBuy ? 'var(--green-success)' : 'var(--red-danger)',
-                              borderRadius: '4px'
-                            }}
-                          >
-                            {tx.type}
-                          </span>
-                        </td>
-                        <td className="fw-bold">{tx.symbol}</td>
-                        <td className="text-end fw-semibold">{tx.quantity}</td>
-                        <td className="text-end fw-semibold">${tx.price.toFixed(2)}</td>
-                        <td className="text-end text-muted d-none d-sm-table-cell" style={{ fontSize: '0.85rem' }}>{tx.date}</td>
-                        <td className="text-center">
-                          <span className={`badge-status badge-${tx.status.toLowerCase()}`}>
-                            {tx.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      <style>{`
+        .stats-card { padding: 16px !important; }
+        .stats-title { font-size: 0.78rem; line-height: 1.3; }
+        .stats-value { font-size: 1.35rem; line-height: 1.2; word-break: break-all; }
 
-        <div className="col-12 col-xl-4">
-          <NewsCard />
-        </div>
-      </div>
-    </div>
+        .skeleton {
+          background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.4s infinite;
+        }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+
+        @media (max-width: 399px) {
+          .stats-card { padding: 12px !important; }
+          .stats-value { font-size: 1.1rem !important; }
+          .stats-title { font-size: 0.72rem; }
+          .stats-icon { width: 30px !important; height: 30px !important; }
+        }
+        @media (min-width: 400px) and (max-width: 767px) {
+          .stats-value { font-size: 1.2rem !important; }
+        }
+        @media (min-width: 768px) and (max-width: 1199px) {
+          .stats-value { font-size: 1.25rem !important; }
+        }
+      `}</style>
+    </motion.div>
   );
 }
